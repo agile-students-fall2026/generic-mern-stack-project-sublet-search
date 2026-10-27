@@ -14,7 +14,7 @@ The app map below provides a high-level visual overview of the application's str
 * **Figma Board:** [Sublet Search App Map](https://www.figma.com/board/jDfLwlhhxFzzD40WKhqoXR/Sublet-Search?node-id=0-1&t=KunZ1wOHs1ZpcKfY-1)
 
 <p align="center">
-  <img src="app-map.png" alt="App Map" width="800"/>
+  <img src="ux-design/app-map.png" alt="App Map" width="800"/>
 </p>
 
 ---
