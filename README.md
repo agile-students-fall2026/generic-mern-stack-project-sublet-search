@@ -41,16 +41,66 @@ We are developing the application incrementally using Scrum practices, including
 
 The project follows the MERN-stack approach:
 
-- **MongoDB** — Database
-- **Express.js** — Back-end framework
-- **React** — Front-end library
-- **Node.js** — Server-side JavaScript runtime
+- **MongoDB** — Database (planned)
+- **Express.js** — Back-end framework (planned)
+- **React.js** — Front-end library
+- **Node.js** — JavaScript runtime
+- **Vite** — Front-end development and build tool
 
 ## Development, Building, and Testing
 
-The application is under active development.
+The application is currently under development. The React front end has been initialized using Vite, while the remaining application features and back-end integration are being implemented in later stages.
 
-The repository includes `front-end/` and `back-end/` directories. Installation, local execution, and testing instructions will be documented as the corresponding application components are implemented and verified.
+### Prerequisites
+
+- Node.js and npm installed (the front-end setup has been tested with Node.js 24).
+- Git installed to clone the repository.
+
+### Running the Front End
+
+First, clone the repository and navigate to the project folder:
+
+```bash
+git clone https://github.com/agile-students-fall2026/generic-mern-stack-project-sublet-search.git
+cd generic-mern-stack-project-sublet-search
+```
+
+Navigate to the front-end directory and install dependencies:
+
+```bash
+cd front-end
+npm install
+```
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Open the local URL displayed in the terminal, usually:
+
+http://localhost:5173/
+
+### Building the Front End
+
+To create a production build, run the following from the `front-end/` directory:
+
+```bash
+npm run build
+```
+
+The compiled application will be generated in the `front-end/dist/` directory.
+
+### Testing
+
+The front-end can currently be checked by running the development server and verifying that the application loads in the browser.
+
+The production build can be verified with `npm run build`. Additional testing instructions will be added as the project develops.
+
+### Back End
+
+The `back-end/` directory is reserved for the Express.js server and database integration. Setup and run instructions for the back end will be added when those components are implemented.
 
 ## Contributing
 
@@ -59,5 +109,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the team's development workflow, cont
 ## Project Resources
 
 - [UX Design Documentation](UX-DESIGN.md) — App map, wireframes, and prototype.
+- [App Map](ux-design/app-map.png) — Diagram of the application's screens and navigation.
 - [UX Design Files](ux-design/) — Design exports and editable source files.
 - [GitHub Issues](https://github.com/agile-students-fall2026/generic-mern-stack-project-sublet-search/issues) — User stories, tasks, and planned features.
