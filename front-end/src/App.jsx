@@ -1,15 +1,7 @@
-import ListingCard from "./components/ListingCard";
 import "./App.css";
+import Explore from "./pages/Explore";
 
 function App() {
-  const testListing = {
-    title: "Brooklyn Apartment",
-    location: "Williamsburg, Brooklyn",
-    price: "$1,650",
-    roommates: 2,
-    image: "/images/sublet-sample-apartment.webp"
-  };
-
   return (
     <div className="app">
       <header>
@@ -17,8 +9,7 @@ function App() {
       </header>
 
       <main>
-        <h2>Explore Sublets</h2>
-        <ListingCard listing={testListing} />
+        <Explore />
       </main>
     </div>
   );
