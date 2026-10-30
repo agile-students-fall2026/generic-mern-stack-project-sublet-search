@@ -1,27 +1,19 @@
-import ListingCard from "./components/ListingCard";
-import "./App.css";
+import {BrowserRouter, Routes, Route} from "react-router-dom"
 
-function App() {
-  const testListing = {
-    title: "Brooklyn Apartment",
-    location: "Williamsburg, Brooklyn",
-    price: "$1,650",
-    roommates: 2,
-    image: "/images/sublet-sample-apartment.webp"
-  };
+import Homepage from "./pages/homepage"
+import Inbox from "./pages/inbox"
+import Navbar from "./pages/navbar"
 
+export default function App() {
   return (
-    <div className="app">
-      <header>
-        <h1>Sublet Search</h1>
-      </header>
-
-      <main>
-        <h2>Explore Sublets</h2>
-        <ListingCard listing={testListing} />
-      </main>
-    </div>
-  );
+    <BrowserRouter basename = {import.meta.env.BASE_URL}>
+      <Navbar />
+      
+      <Routes>
+        <Route path = "/" element = {<Homepage />} />
+        <Route path = "/inbox" element = {<Inbox />} />
+      </Routes>
+    </BrowserRouter>
+  )
 }
 
-export default App;
