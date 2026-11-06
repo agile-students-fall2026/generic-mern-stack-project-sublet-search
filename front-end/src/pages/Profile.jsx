@@ -1,96 +1,202 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import Header from "../components/Header";
 import ListingCard from "../components/ListingCard";
 import ReviewCard from "../components/ReviewCard";
 import mockListings from "../mockListings";
 import "./Profile.css";
 
-const USER = {
-    name: "Nana",
-    email: "nana@nyu.edu",
-  };
+export default function Profile(props) {
+  const [mode, setMode] = useState("subtenant");
 
-const REVIEWS = [
-  {
-    id: 1,
-    author: "Morgan",
-    date: "October 2026",
-    text: "Nana was easy to communicate. The apartment was clean.",
-  },
-];
+  let currentUser = props.user;
+  if (!currentUser) {
+    currentUser = {
+      name: "Alex Chen",
+      bio: "NYU student looking for summer housing near Washington Square Park.",
+      university: "NYU",
+      location: "New York",
+    };
+  }
 
-export default function Profile({ user = USER, onLogout }) {
-  const [mode, setMode] = useState("sublessor");
-  const [removedListings, setRemovedListings] = useState([]);
+  let listings = props.activeListings;
+  if (!listings) {
+    listings = mockListings;
+  }
 
-  const handleRemove = (id) => {
-    setRemovedListings([...removedListings, id]);
-  };
+  let saved = props.savedListings;
+  if (!saved) {
+    saved = [mockListings[0], mockListings[1]];
+  }
 
-  const activeListings = mockListings.filter(
-    (listing) => !removedListings.includes(listing.id)
-  );
+  let reviewsList = props.REVIEWS;
+  if (!reviewsList) {
+    reviewsList = [];
+  }
+
+  const myApplications = [
+    {
+      id: 1,
+      title: "Studio in East Village",
+      landlord: "Sarah M.",
+      status: "Pending",
+      date: "May 1 - Aug 31",
+    },
+    {
+      id: 2,
+      title: "1BR in Williamsburg",
+      landlord: "David K.",
+      status: "Approved",
+      date: "Jun 1 - Aug 15",
+    },
+  ];
+
+  function handleSubtenantClick() {
+    setMode("subtenant");
+  }
+
+  function handleSublessorClick() {
+    setMode("sublessor");
+  }
 
   return (
     <div>
-      <Header onMenu={() => {}} />
+      <Header onMenu={function () {}} />
 
       <div className="page">
         <h2>Profile</h2>
 
-        {/* Profile Card */}
-        <div>
-            
-          </div>
-
+        {/* Profile Info */}
+        <div className="card">
           <div className="photo">Profile photo</div>
-          <h3>{user.name}</h3>
-          <p>
-            NYU student. Subletting my place while I'm away
-            this summer.
+          <h3>{currentUser.name}</h3>
+          <p>{currentUser.bio}</p>
+          <p className="muted">
+            {currentUser.university} | {currentUser.location}
           </p>
-          <p className="muted">NYU | New York</p>
 
           <div>
-              <button
-                className={mode === "subtenant" ? "active" : ""}
-                onClick={() => setMode("subtenant")}
-              >
-                Subtenant
-              </button>
-             
-              <button
-                className={mode === "sublessor" ? "active" : ""}
-                onClick={() => setMode("sublessor")}
-              >
-                Sublessor
-              </button>
-            
+            <button
+              className={mode === "subtenant" ? "active" : ""}
+              onClick={handleSubtenantClick}
+            >
+              Subtenant Mode
+            </button>
+
+            <button
+              className={mode === "sublessor" ? "active" : ""}
+              onClick={handleSublessorClick}
+            >
+              Sublessor Mode
+            </button>
+          </div>
+        </div>
+
+        {/* Verifications */}
+        <div className="card">
+          <h3>Verifications</h3>
+          <ul className="verifications-list">
+            <li> <strong>NYU Email Verified</strong> (.edu)</li>
+            <li> <strong>Government ID Verified</strong></li>
+            <li> <strong>Phone Number Verified</strong></li>
+          </ul>
+        </div>
+
+        {mode === "subtenant" && (
+          <div>
+            <div className="section">
+              <h3>Saved Sublets ({saved.length})</h3>
+              {saved.length > 0 ? (
+                <div className="listings-grid">
+                  {saved.map(function (item) {
+                    return <ListingCard key={item.id} listing={item} />;
+                  })}
+                </div>
+              ) : (
+                <p className="muted">
+                  No saved listings yet.
+                </p>
+              )}
             </div>
 
-        </div>
+            <div className="card">
+              <h3>My Applications</h3>
+              {myApplications.length > 0 ? (
+                <div className="applications-list">
+                  {myApplications.map(function (app) {
+                    return (
+                      <div key={app.id} className="application-item">
+                        <div>
+                          <strong className="app-title">{app.title}</strong>
+                          <p className="muted app-details">
+                            Host: {app.landlord} • {app.date}
+                          </p>
+                        </div>
+                        <span className={`status-badge ${app.status.toLowerCase()}`}>
+                          {app.status}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="muted">No applications.</p>
+              )}
+            </div>
+          </div>
+        )}
 
         {mode === "sublessor" && (
           <div className="section">
-            <h3>My Listings</h3>
-            <button className="primary-btn">Post a Sublet</button>
+            <div className="section-header">
+              <h3>My Listings ({listings.length})</h3>
+              <button
+                className="primary-btn"
+                onClick={function () {
+                  if (props.navigate) {
+                    props.navigate("/post-sublet");
+                  }
+                }}
+              >
+                + Post a Sublet
+              </button>
+            </div>
 
-            {activeListings.length > 0 ? (
-              <div className="listings-grid" style={{ marginTop: "16px" }}>
-                {activeListings.map((listing) => (
-                  <div key={listing.id} className="listing-wrapper">
-                    <ListingCard listing={listing} />
-                    <button
-                      className="remove-btn"
-                      onClick={() => handleRemove(listing.id)}
-                    >
-                      Remove Listing
-                    </button>
-                  </div>
-                ))}
+            {listings.length > 0 ? (
+              <div className="listings-grid">
+                {listings.map(function (listing) {
+                  return (
+                    <div key={listing.id} className="listing-wrapper">
+                      <ListingCard listing={listing} />
+                      <div className="listing-actions">
+                        <button
+                          className="remove-btn"
+                          onClick={function () {
+                            if (props.handleRemove) {
+                              props.handleRemove(listing.id);
+                            }
+                          }}
+                        >
+                          Remove Listing
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
-              <p className="muted">No listings available.</p>
+              <div className="card empty-card">
+                <p className="muted">You haven't posted any sublet listings yet.</p>
+                <button
+                  className="primary-btn margin-top-sm"
+                  onClick={function () {
+                    if (props.navigate) {
+                      props.navigate("/post-sublet");
+                    }
+                  }}
+                >
+                  Create Your First Listing
+                </button>
+              </div>
             )}
           </div>
         )}
@@ -98,17 +204,58 @@ export default function Profile({ user = USER, onLogout }) {
         {/* Reviews Section */}
         <div className="card">
           <h3>My Reviews</h3>
-          <p className="muted">{REVIEWS.length} review</p>
+          <p className="muted">{reviewsList.length} reviews</p>
 
-          {REVIEWS.map((review) => (
-            <ReviewCard key={review.id} review={review} />
-          ))}
+          {reviewsList.length > 0 ? (
+            reviewsList.map(function (rev) {
+              return <ReviewCard key={rev.id} review={rev} />;
+            })
+          ) : (
+            <p className="muted margin-top-sm">No reviews written yet.</p>
+          )}
         </div>
 
-          <button className="logout-btn" onClick={onLogout}>
-            Log Out
-          </button>
-     
+        {/* Settings Links */}
+        <div className="card">
+          <h3>Account Settings</h3>
+          <div className="settings-links">
+            <button
+              className="link-btn"
+              onClick={function () {
+                if (props.navigate) {
+                  props.navigate("/edit-profile");
+                }
+              }}
+            >
+              Edit Profile Details
+            </button>
+            <button
+              className="link-btn"
+              onClick={function () {
+                if (props.navigate) {
+                  props.navigate("/verification");
+                }
+              }}
+            >
+              ID & Student Verification
+            </button>
+            <button
+              className="link-btn"
+              onClick={function () {
+                if (props.navigate) {
+                  props.navigate("/payment-methods");
+                }
+              }}
+            >
+              Payment Methods
+            </button>
+          </div>
+        </div>
+
+        <button className="logout-btn" onClick={props.onLogout}>
+          Log Out
+        </button>
       </div>
+    </div>
   );
 }
