@@ -15,7 +15,6 @@ function Explore({ savedIds, onToggleSave }) {
         async function getListings() {
             try {
                 const response = await axios("/api/listings");
-                console.log(response.data);
                 setListings(response.data);
             } catch (error) {
                 console.error("Error fetching listings:", error);
@@ -99,7 +98,7 @@ function Explore({ savedIds, onToggleSave }) {
             </div>
 
             {filteredListings.length === 0 && (
-                <p>No listigs match your search or filters.</p>
+                <p>No listings match your search or filters.</p>
             )}
 
             {showFilters && (
