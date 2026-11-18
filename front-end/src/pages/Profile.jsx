@@ -229,19 +229,19 @@ export default function Profile(props) {
           <div className="settings-links">
             <button
               className="link-btn"
-              onClick={() => navigate("/edit-profile")}
+              onClick={() => navigate("/app/edit-profile")}
             >
               Edit Profile Details
             </button>
             <button
               className="link-btn"
-              onClick={() => navigate("/verification")}
+              onClick={() => navigate("/app/verification")}
             >
               ID & Student Verification
             </button>
             <button
               className="link-btn"
-              onClick={() => navigate("/payment-methods")}
+              onClick={() => navigate("/app/payment-methods")}
             >
               Payment Methods
             </button>
