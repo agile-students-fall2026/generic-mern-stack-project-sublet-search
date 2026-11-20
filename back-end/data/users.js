@@ -1,16 +1,19 @@
 const users = [
     {
-        id: "user1",
-        name: "Alice Johnson",
-        email: "alice@example.com",
-        password: "password123"
+      id: "user1",
+      name: "Nana",
+      email: "nana@nyu.edu",
+      bio: "CS Junior looking for summer sublets.",
+      school: "NYU",
+      city: "New York",
+      photo: "",
+      verifications: {
+        eduEmail: true,
+        govId: false,
+        phone: true,
+      },
+      savedListingIds: [3],
     },
-    {
-        id: "user2",
-        name: "Bob Smith",
-        email: "bob@example.com",
-        password: "password123"
-    }
-];
-
-export default users;
+  ];
+  
+  export default users;

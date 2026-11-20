@@ -13,9 +13,10 @@ import Profile from "./pages/Profile";
 import MyListings from "./pages/MyListings";
 import SavedListings from "./pages/SavedListings";
 import ViewDetails from "./pages/ViewDetails";
-
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-
+import EditProfile from "./pages/EditProfile";
+import Verification from "./pages/Verification";
+import PaymentMethods from "./pages/PaymentMethods";
+import {BrowserRouter, Routes, Route} from "react-router-dom";
 import "./App.css";
 
 function App() {
@@ -31,6 +32,40 @@ function App() {
             return null;
         }
     });
+  }
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path = "/app" element ={<Layout/>}>
+          <Route index element = {<Login onLogin={setUser} />} />
+          <Route
+            path="explore"
+            element={<Explore savedIds={savedIds} onToggleSave={toggleSave} />}
+          />
+          <Route path = "reviewForm" element = {<ReviewForm />} />
+          <Route path = "signUp" element = {<Signup />} />
+          <Route path = "messages" element = {<Messages />} />
+          <Route path = "post" element = {<PostSubletPage />} />
+          <Route path="my-listings" element={<MyListings />} /> 
+          <Route path="profile" element={<Profile user={user} savedIds={savedIds} onLogout={handleLogout} /> }
+          />
+          <Route path="listings/:id" element={<ViewDetails />} />
+          <Route path="edit-profile" element={<EditProfile />} />
+          <Route path="verification" element={<Verification />} />
+          <Route path="payment-methods" element={<PaymentMethods />} />
+          <Route
+            path="saved"
+            element={<SavedListings savedIds={savedIds} onToggleSave={toggleSave} />}
+          />
+        </Route>
+        
+        <Route path = "/" element = {<Login onLogin={setUser} />} />
+        <Route path = "/signUp" element = {<Signup />} />
+       
+      </Routes>
+    </BrowserRouter>
+  );
+}
 
     useEffect(() => {
         async function fetchSavedListings() {
