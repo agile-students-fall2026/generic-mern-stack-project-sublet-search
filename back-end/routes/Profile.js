@@ -112,6 +112,22 @@ app.get("/api/users/me/reviews", (req, res) => {
   res.json(myReviews);
 });
 
+app.get("/api/users/:userId/reviews/received", (req, res) => {
+    const userId = req.params.userId;
+
+    const user = users.find((u) => u.id === userId);
+
+    if (!user) {
+        return res.status(404).json({ error: "User not found" });
+    }
+
+    const receivedReviews = reviews.filter(
+        (review) => review.targetUserId === userId
+    );
+
+    res.json(receivedReviews);
+});
+
 app.post("/api/auth/logout", (req, res) => {
   res.status(204).end();
 });
