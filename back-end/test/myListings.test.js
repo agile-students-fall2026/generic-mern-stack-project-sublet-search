@@ -93,7 +93,7 @@ describe("My Listings API", () => {
     });
 
     it("should not delete someone else's listing", async () => {
-        const res = await request.execute(app).delete("/api/users/me/listings/3"); // listing 3 belongs to user2
+        const res = await request.execute(app).delete("/api/users/me/listings/3"); 
 
         expect(res).to.have.status(403);
     });

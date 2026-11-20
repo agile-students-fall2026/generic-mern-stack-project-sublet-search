@@ -82,8 +82,8 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB per image
-    fileFilter: (req, file, cb) => cb(null, file.mimetype.startsWith("image/")), // images only
+    limits: { fileSize: 5 * 1024 * 1024 }, 
+    fileFilter: (req, file, cb) => cb(null, file.mimetype.startsWith("image/")), 
 });
 
 router.post("/api/uploads/listing-images", upload.array("photos", 10), (req, res) => {

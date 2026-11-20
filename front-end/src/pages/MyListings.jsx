@@ -1,13 +1,28 @@
-import { useState } from 'react'
-import ListingCard from '../components/ListingCard'
-import './MyListings.css'
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import ListingCard from '../components/ListingCard';
+import './MyListings.css';
+
+const API = 'http://localhost:3000'
 
 const MyListings = () => {
   const [listings, setListings] = useState([])
 
-  const handleRemove = id => {
+  useEffect(() => {
+    axios
+      .get(`${API}/api/users/me/listings`)
+      .then(response => setListings(response.data.active))
+      .catch(err => console.log(`Received server error: ${err}`))
+  }, [])
+
+  const handleRemove = async id => {
     if (window.confirm('Remove this listing?')) {
-      setListings(listings.filter(listing => listing.id !== id))
+      try {
+        await axios.delete(`${API}/api/users/me/listings/${id}`)
+        setListings(listings.filter(listing => listing.id !== id))
+      } catch (err) {
+        console.log(`Received server error: ${err}`)
+      }
     }
   }
 
