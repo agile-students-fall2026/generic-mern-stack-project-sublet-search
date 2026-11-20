@@ -1,5 +1,5 @@
 import { useState } from 'react'
-// import axios from 'axios'
+import axios from 'axios'
 import PostSubletPhoto from './PostSubletPhoto'
 import './PostSubletForm.css'
 
@@ -11,6 +11,9 @@ const PostSublet = () => {
     const [description, setDescription] = useState('')
     const [photos, setPhotos] = useState([])
     const [error, setError] = useState('')
+    const [title, setTitle] = useState('')
+    const [success, setSuccess] = useState('')
+    const API = 'http://localhost:3000'
 
     const handlePhotoSelect = e => {
         const chosen = Array.from(e.target.files).map(file => ({file: file, url: URL.createObjectURL(file),}))
@@ -29,41 +32,59 @@ const PostSublet = () => {
         setPhotos(photos.filter((photo, i) => i !== index))
     }
 
-    const handleSubmit = e => {
+    const handleSubmit = async e => {
         e.preventDefault()
-
-        const formData = new FormData()
-        formData.append('location', location)
-        formData.append('price', price)
-        formData.append('fromDate', fromDate)
-        formData.append('toDate', toDate)
-        formData.append('description', description)
-
-        for (let i = 0; i < photos.length; i++) {
-            formData.append('photos', photos[i].file)
+        setError('')
+        setSuccess('')
+    
+        if (photos.length === 0) {
+            setError('Please add at least one photo.')
+            return
         }
+    
+        try {
+            const formData = new FormData()
+            photos.forEach(p => formData.append('photos', p.file))
+            const uploadRes = await axios.post(`${API}/api/uploads/listing-images`, formData)
 
-        // const config = {
-        //     headers: {
-        //         'content-type': 'multipart/form-data',
-        //     },
-        // }
-        // const apiUrl = 'https://someserversomehwere.com/puppy/save' //CHANGE
-        // axios
-        //     .post(apiUrl, formData, config)
-        //     .then(response => {
-        //         console.log(`Received server response: ${response.data}`)
-        //     })
-        //     .catch(err => {
-        //         console.log(`Received server error: ${err}`)
-        //         setError(
-        //             "This form doesn't actually work, sorry.  There is no back-end for this example app in which to save the data. Pop open your web browser's Javascript Console to see the error trying to connect to a non-existent back-end.",
-        //         )
-        //     })
+            await axios.post(`${API}/api/listings`, {
+                title: title,
+                location: location,
+                price: price,
+                startDate: fromDate, 
+                endDate: toDate,
+                description: description,
+                photos: uploadRes.data.urls,
+            })
+    
+            setSuccess('Your listing was posted!')
+            setTitle('')
+            setLocation('')
+            setPrice('')
+            setFromDate('')
+            setToDate('')
+            setDescription('')
+            setPhotos([])
+        } catch (err) {
+            setError(err.response?.data?.error || 'Something went wrong posting your listing.')
+        }
     }
 
     return (
         <form onSubmit={handleSubmit}>
+            <div className="title">
+                <label htmlFor="title">Title</label>
+                <br />
+                <input
+                    type="text"
+                    id="title"
+                    placeholder="e.g. Sunny studio near campus"
+                    value={title}
+                    onChange={e => setTitle(e.target.value)}
+                    required
+                />
+                <br />
+            </div>
             <div className="location">
                 <label htmlFor="location">Location</label>
                 <br />

@@ -1,14 +1,27 @@
 import express from 'express' 
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 import listings from "../data/listings.js";
+import paymentMethods from "../data/paymentMethods.js";
 
-const app = express.Router();
+const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-app.use((req, res, next) => {
+const formatDate = date => {
+    const [year, month, day] = date.split("-");
+    return `${months[Number(month) - 1]} ${Number(day)}`;
+};
+
+const formatPrice = amount => `$${amount.toLocaleString("en-US")}`;
+
+const router = express.Router();
+
+router.use((req, res, next) => {
     req.userId = req.header("x-user-id") || "user1";
     next();
 });
 
-app.get("/api/users/me/listings", (req,res) => {
+router.get("/api/users/me/listings", (req,res) => {
     const myListing = listings.filter(listing => listing.ownerId === req.userId);
     res.json({
         active: myListing.filter(listing => listing.active),
@@ -16,7 +29,7 @@ app.get("/api/users/me/listings", (req,res) => {
     });
 });
 
-app.delete("/api/users/me/listings/:listingId", (req,res) => {
+router.delete("/api/users/me/listings/:listingId", (req,res) => {
     const index = listings.findIndex(listing => listing.id === Number(req.params.listingId));
     if (index === -1){
         return res.status(404).json({ error: "Listing not found." });
@@ -28,7 +41,7 @@ app.delete("/api/users/me/listings/:listingId", (req,res) => {
     res.status(204).end();
 });
 
-app.put("/api/listings/:listingId", (req, res) => {
+router.put("/api/listings/:listingId", (req, res) => {
     const listing = listings.find(listing => listing.id === Number(req.params.listingId));
 
     if (!listing) {
@@ -48,16 +61,32 @@ app.put("/api/listings/:listingId", (req, res) => {
     res.json(listing);
 });
 
-app.get("/api/listings/:listingId", (req,res) => {
+router.get("/api/listings/:listingId", (req,res) => {
     const listing = listings.find(listing => listing.id === Number(req.params.listingId));
 
     if (!listing || (!listing.active && listing.ownerId !== req.userId)) {
         return res.status(404).json({ error: "Listing not found." });
     }
-    res.json(listing);
+    res.json({ ...listing, photos: listing.photos || [listing.image] });
 });
 
-app.post("/api/uploads/listing-images", upload.array("photos", 10), (req, res) => {
+fs.mkdirSync("public/uploads", { recursive: true });
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, "public/uploads"),
+    filename: (req, file, cb) => {
+        const unique = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+        cb(null, `${file.fieldname}-${unique}${path.extname(file.originalname)}`);
+    },
+});
+
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB per image
+    fileFilter: (req, file, cb) => cb(null, file.mimetype.startsWith("image/")), // images only
+});
+
+router.post("/api/uploads/listing-images", upload.array("photos", 10), (req, res) => {
     if (!req.files || req.files.length === 0) {
         return res.status(400).json({ error: "No images uploaded." });
     }
@@ -66,7 +95,7 @@ app.post("/api/uploads/listing-images", upload.array("photos", 10), (req, res) =
     res.status(201).json({ urls: urls });
 });
 
-app.post("/api/listings", (req,res) => {
+router.post("/api/listings", (req,res) => {
     const { title, location, price, startDate, endDate, description, photos } = req.body;
 
     if (!title || !location || price === undefined || !startDate || !endDate) {
@@ -103,11 +132,11 @@ app.post("/api/listings", (req,res) => {
     res.status(201).json(newListing);
 });
 
-app.get("/api/users/me/payment-methods", (req, res) => {
+router.get("/api/users/me/payment-methods", (req, res) => {
     const card = paymentMethods
         .filter(method => method.userId === req.userId)
         .map(({ userId, ...method }) => method); 
     res.json(card);
 });
 
-export default app;
+export default router;
