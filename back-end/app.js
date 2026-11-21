@@ -1,6 +1,7 @@
 import express from 'express';
 import listings from "./data/listings.js";
 import authRoutes from "./routes/auth.js";
+import conversationsRouter from "./routes/ConversationsRouter.js";
 import profileRoutes from "./routes/Profile.js";
 
 const app = express();
@@ -12,6 +13,7 @@ app.use((req, res, next) => {
 });
 
 app.use(authRoutes);
+app.use("/api/conversations", conversationsRouter);
 
 app.get("/api/listings", (req, res) => {
     res.json(listings);

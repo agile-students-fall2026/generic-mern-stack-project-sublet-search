@@ -62,6 +62,31 @@
     align-self: flex-start;
 }
 
+.seen-tag {
+    display: block;
+    margin-top: 4px;
+    text-align: right;
+    color: #666;
+    font-size: 11px;
+}
+
+.new-messages-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin: 8px 0;
+    color: #2563eb;
+    font-size: 12px;
+}
+
+.new-messages-line::before,
+.new-messages-line::after {
+    content: "";
+    flex: 1;
+    border-top: 1px solid #2563eb;
+}
+
 .delete-message {
     margin-left: 8px;
 }
