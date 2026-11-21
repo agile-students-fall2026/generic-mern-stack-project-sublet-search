@@ -112,6 +112,55 @@ app.get("/api/users/me/reviews", (req, res) => {
   res.json(myReviews);
 });
 
+app.get("/api/users/:userId/reviews/received", (req, res) => {
+  const userId = req.params.userId;
+
+  const user = users.find((u) => u.id === userId);
+
+  if (!user) {
+      return res.status(404).json({ error: "User not found" });
+  }
+
+  const receivedReviews = reviews.filter(
+      (review) => review.targetUserId === userId
+  );
+
+  res.json(receivedReviews);
+});
+
+app.get("/api/users/:userId/reviews/submitted", (req, res) => {
+  const userId = req.params.userId;
+
+  const user = users.find((u) => u.id === userId);
+
+  if (!user) {
+      return res.status(404).json({ error: "User not found" });
+  }
+
+  const submittedReviews = reviews.filter(
+      (review) => review.authorUserId === userId
+  );
+
+  res.json(submittedReviews);
+});
+
+app.post("/api/reviews/:reviewId/like", (req, res) => {
+  const reviewId = Number(req.params.reviewId);
+
+  const review = reviews.find((r) => r.id === reviewId);
+
+  if (!review) {
+      return res.status(404).json({ error: "Review not found" });
+  }
+
+  if (!review.likedBy.includes(req.userId)) {
+      review.likedBy.push(req.userId);
+      review.likes++;
+  }
+
+  res.json(review);
+});
+
 app.post("/api/auth/logout", (req, res) => {
   res.status(204).end();
 });
