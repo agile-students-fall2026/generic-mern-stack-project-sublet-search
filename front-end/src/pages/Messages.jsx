@@ -2,7 +2,12 @@ import LeaseMessaging from "../components/LeaseMessaging";
 import ChatDashboardElement from "../components/ChatDashboardElement"
 import "./Messages.css";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
+function saveUnreadCount(count) {
+    localStorage.setItem("unreadMessageCount", String(count));
+    window.dispatchEvent(new Event("unreadMessagesChanged"));
+}
 
 export default function Messages(){
     const storedUser = JSON.parse(localStorage.getItem("user") || "null");
@@ -24,6 +29,19 @@ export default function Messages(){
 
                 const data = await response.json();
                 setConversations(data);
+
+                const unreadCount = data.reduce((total, conversation) => {
+                    const readField =
+                        conversation.userOne === currentUserId
+                            ? "userOneRead"
+                            : "userTwoRead";
+
+                    return total + conversation.messages.filter(
+                        (item) => !item[readField]
+                    ).length;
+                }, 0);
+
+                saveUnreadCount(unreadCount);
             } catch (err) {
                 setError(err.message);
             }
@@ -42,6 +60,13 @@ export default function Messages(){
         return userId;
     }
 
+    const handleMessagesRead = useCallback((readCount) => {
+        const savedCount = Number(
+            localStorage.getItem("unreadMessageCount") || 0
+        );
+        saveUnreadCount(Math.max(savedCount - readCount, 0));
+    }, []);
+
     if (currentConversation) {
         const otherUserId =
             currentConversation.userOne === currentUserId
@@ -53,6 +78,7 @@ export default function Messages(){
                 conversationId={currentConversation.conversationId}
                 currentUserId={currentUserId}
                 otherUserName={getUserName(otherUserId)}
+                onMessagesRead={handleMessagesRead}
                 onBack={() => setCurrentConversation(null)}
             />
         );

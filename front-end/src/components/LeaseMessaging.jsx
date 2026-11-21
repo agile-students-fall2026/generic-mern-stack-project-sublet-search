@@ -1,14 +1,17 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import "./LeaseMessaging.css";
 
 export default function LeaseMessaging({
     conversationId,
     currentUserId,
     otherUserName,
+    onMessagesRead,
     onBack
 }) {
     const [message, setMessage] = useState("");
     const [messages, setMessages] = useState([]);
+    const [firstUnreadIndex, setFirstUnreadIndex] = useState(-1);
+    const [otherUserReadField, setOtherUserReadField] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [sending, setSending] = useState(false);
@@ -30,6 +33,42 @@ export default function LeaseMessaging({
 
                 const conversation = await response.json();
                 setMessages(conversation.messages);
+
+                const currentUserReadField =
+                    conversation.userOne === currentUserId
+                        ? "userOneRead"
+                        : "userTwoRead";
+                setOtherUserReadField(
+                    conversation.userOne === currentUserId
+                        ? "userTwoRead"
+                        : "userOneRead"
+                );
+
+                const unreadIndexes = conversation.messages
+                    .map((item, index) => item[currentUserReadField] ? -1 : index)
+                    .filter((index) => index !== -1);
+
+                if (unreadIndexes.length > 0) {
+                    setFirstUnreadIndex(unreadIndexes[0]);
+
+                    const readResponse = await fetch(
+                        `/api/conversations/${conversationId}/read`,
+                        {
+                            method: "PATCH",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "x-user-id": currentUserId
+                            },
+                            body: JSON.stringify({ reader: currentUserId })
+                        }
+                    );
+
+                    if (!readResponse.ok) {
+                        throw new Error("Could not mark messages as read.");
+                    }
+
+                    onMessagesRead(unreadIndexes.length);
+                }
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -38,7 +77,7 @@ export default function LeaseMessaging({
         }
 
         loadMessages();
-    }, [conversationId, currentUserId]);
+    }, [conversationId, currentUserId, onMessagesRead]);
 
     async function handleSend(e) {
         e.preventDefault();
@@ -89,18 +128,29 @@ export default function LeaseMessaging({
                 {loading && <p>Loading messages...</p>}
                 {!loading && messages.length === 0 && <p>No messages yet.</p>}
 
-                {messages.map((item, index) => (
-                    <p
-                        key={`${item.date}-${index}`}
-                        className={`message ${
-                            item.sender === currentUserId
-                                ? "sent-by-me"
-                                : "sent-by-other"
-                        }`}
-                    >
-                        {item.content}
-                    </p>
-                ))}
+                {messages.map((item, index) => {
+                    const sentByMe = item.sender === currentUserId;
+
+                    return (
+                        <Fragment key={`${item.date}-${index}`}>
+                            {index === firstUnreadIndex && (
+                                <div className="new-messages-line">
+                                    <span>New messages</span>
+                                </div>
+                            )}
+                            <div
+                                className={`message ${
+                                    sentByMe ? "sent-by-me" : "sent-by-other"
+                                }`}
+                            >
+                                {item.content}
+                                {sentByMe && item[otherUserReadField] && (
+                                    <small className="seen-tag">Seen</small>
+                                )}
+                            </div>
+                        </Fragment>
+                    );
+                })}
             </div>
 
             {error && <p>{error}</p>}
