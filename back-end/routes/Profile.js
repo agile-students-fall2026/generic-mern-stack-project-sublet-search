@@ -144,6 +144,23 @@ app.get("/api/users/:userId/reviews/submitted", (req, res) => {
   res.json(submittedReviews);
 });
 
+app.post("/api/reviews/:reviewId/like", (req, res) => {
+  const reviewId = Number(req.params.reviewId);
+
+  const review = reviews.find((r) => r.id === reviewId);
+
+  if (!review) {
+      return res.status(404).json({ error: "Review not found" });
+  }
+
+  if (!review.likedBy.includes(req.userId)) {
+      review.likedBy.push(req.userId);
+      review.likes++;
+  }
+
+  res.json(review);
+});
+
 app.post("/api/auth/logout", (req, res) => {
   res.status(204).end();
 });
