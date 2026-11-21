@@ -14,6 +14,36 @@ const users = [
       },
       savedListingIds: [3],
     },
+    {
+      id: "user2",
+      name: "Morgan",
+      email: "morgan@nyu.edu",
+      bio: "NYU student looking for housing.",
+      school: "NYU",
+      city: "New York",
+      photo: "",
+      verifications: {
+          eduEmail: true,
+          govId: false,
+          phone: false,
+      },
+      savedListingIds: [],
+    },
+    {
+      id: "user3",
+      name: "Jordan",
+      email: "jordan@nyu.edu",
+      bio: "NYU student.",
+      school: "NYU",
+      city: "New York",
+      photo: "",
+      verifications: {
+          eduEmail: true,
+          govId: false,
+          phone: false,
+      },
+      savedListingIds: [],
+    },
   ];
   
   export default users;
