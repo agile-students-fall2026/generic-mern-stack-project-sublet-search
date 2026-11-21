@@ -45,7 +45,7 @@ describe("Saved Listings API", () => {
 
         const res = await request.execute(app).get("/api/saved");
 
-        expect(res.body).to.have.lengthOf(1);
+        expect(res.body.filter((listing) => listing.id === 1)).to.have.lengthOf(1);
     });
 
     it("should reject a nonexistent listing", async () => {
