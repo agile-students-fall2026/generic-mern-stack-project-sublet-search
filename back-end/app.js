@@ -1,6 +1,7 @@
 import express from 'express';
 import listings from "./data/listings.js";
 import authRoutes from "./routes/auth.js";
+import conversationsRouter from "./routes/ConversationsRouter.js";
 import myListingsRouter from "./routes/MyListings.js";
 import cors from "cors"
 import profileRoutes from "./routes/Profile.js";
@@ -16,6 +17,7 @@ app.use((req, res, next) => {
 });
 
 app.use(authRoutes);
+app.use("/api/conversations", conversationsRouter);
 app.use(myListingsRouter);
 
 app.get("/api/listings", (req, res) => {
