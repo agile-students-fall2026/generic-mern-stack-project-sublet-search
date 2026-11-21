@@ -1,20 +1,58 @@
 import LeaseMessaging from "../components/LeaseMessaging";
-import MockConversations from "../mockConversations.js"
-import MockChats from "../mockChats.js"
 import ChatDashboardElement from "../components/ChatDashboardElement"
 import "./Messages.css";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Messages(){
+    const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+    const currentUserId = storedUser?.id || "user1";
+    const [conversations, setConversations] = useState([]);
     const [currentConversation, setCurrentConversation] = useState(null);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        async function loadConversations() {
+            try {
+                const response = await fetch("/api/conversations", {
+                    headers: { "x-user-id": currentUserId }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Could not load conversations.");
+                }
+
+                const data = await response.json();
+                setConversations(data);
+            } catch (err) {
+                setError(err.message);
+            }
+        }
+
+        loadConversations();
+    }, [currentUserId]);
+
+    function getUserName(userId) {
+        if (userId === "user1") {
+            return "Alice Johnson";
+        }
+        if (userId === "user2") {
+            return "Bob Smith";
+        }
+        return userId;
+    }
 
     if (currentConversation) {
+        const otherUserId =
+            currentConversation.userOne === currentUserId
+                ? currentConversation.userTwo
+                : currentConversation.userOne;
+
         return (
             <LeaseMessaging
-                sublessor={currentConversation.sublessor}
-                subletName={currentConversation.subletName}
-                initialMessages={MockChats[currentConversation.id]}
+                conversationId={currentConversation.conversationId}
+                currentUserId={currentUserId}
+                otherUserName={getUserName(otherUserId)}
                 onBack={() => setCurrentConversation(null)}
             />
         );
@@ -22,19 +60,27 @@ export default function Messages(){
 
     return (
         <div className="messages-page">
-            <h2>Lease Messages</h2>
-            <p>{MockConversations.length} leases</p>
+            <h2>Messages</h2>
+            {error && <p>{error}</p>}
+            {!error && conversations.length === 0 && <p>No conversations.</p>}
             <ul className="conversation-list">
-                {MockConversations.map((conversation) => (
-                    <li key={conversation.id}>
+                {conversations.map((conversation) => {
+                    const otherUserId =
+                        conversation.userOne === currentUserId
+                            ? conversation.userTwo
+                            : conversation.userOne;
+
+                    return (
+                    <li key={conversation.conversationId}>
                         <ChatDashboardElement
-                            sublessor={conversation.sublessor}
-                            subletName={conversation.subletName}
-                            lastActive={conversation.lastActive}
+                            sublessor={getUserName(otherUserId)}
+                            subletName="Open conversation"
+                            lastActive=""
                             onOpen={() => setCurrentConversation(conversation)}
                         />
                     </li>
-                ))}
+                    );
+                })}
             </ul>
         </div>
     );
