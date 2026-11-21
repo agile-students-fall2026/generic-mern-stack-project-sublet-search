@@ -1,12 +1,8 @@
+
 import "./Explore.css";
 import ListingCard from "../components/ListingCard";
-import mockListings from "../mockListings";
 
-function SavedListings({ savedIds, onToggleSave }) {
-    const savedListings = mockListings.filter(listing =>
-        savedIds.includes(listing.id)
-    );
-
+function SavedListings({ savedListings, onToggleSave }) {
     return (
         <div className="explore-page">
             <h2>Saved Listings</h2>
