@@ -28,7 +28,22 @@ const users = [
           phone: false,
       },
       savedListingIds: [],
-    }
+    },
+    {
+      id: "user3",
+      name: "Jordan",
+      email: "jordan@nyu.edu",
+      bio: "NYU student.",
+      school: "NYU",
+      city: "New York",
+      photo: "",
+      verifications: {
+          eduEmail: true,
+          govId: false,
+          phone: false,
+      },
+      savedListingIds: [],
+    },
   ];
   
   export default users;

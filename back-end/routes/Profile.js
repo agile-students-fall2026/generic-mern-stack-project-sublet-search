@@ -113,19 +113,35 @@ app.get("/api/users/me/reviews", (req, res) => {
 });
 
 app.get("/api/users/:userId/reviews/received", (req, res) => {
-    const userId = req.params.userId;
+  const userId = req.params.userId;
 
-    const user = users.find((u) => u.id === userId);
+  const user = users.find((u) => u.id === userId);
 
-    if (!user) {
-        return res.status(404).json({ error: "User not found" });
-    }
+  if (!user) {
+      return res.status(404).json({ error: "User not found" });
+  }
 
-    const receivedReviews = reviews.filter(
-        (review) => review.targetUserId === userId
-    );
+  const receivedReviews = reviews.filter(
+      (review) => review.targetUserId === userId
+  );
 
-    res.json(receivedReviews);
+  res.json(receivedReviews);
+});
+
+app.get("/api/users/:userId/reviews/submitted", (req, res) => {
+  const userId = req.params.userId;
+
+  const user = users.find((u) => u.id === userId);
+
+  if (!user) {
+      return res.status(404).json({ error: "User not found" });
+  }
+
+  const submittedReviews = reviews.filter(
+      (review) => review.authorUserId === userId
+  );
+
+  res.json(submittedReviews);
 });
 
 app.post("/api/auth/logout", (req, res) => {
