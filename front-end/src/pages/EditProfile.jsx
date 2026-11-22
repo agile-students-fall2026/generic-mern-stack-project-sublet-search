@@ -49,6 +49,12 @@ export default function EditProfile() {
       });
 
       if (res.ok) {
+        const updated = await res.json();
+        const current = JSON.parse(localStorage.getItem("user") || "{}");
+        localStorage.setItem(
+          "user",
+          JSON.stringify({ ...current, name: updated.name, photo: updated.photo })
+        );
         navigate("/app/profile");
       }
     } catch (err) {
