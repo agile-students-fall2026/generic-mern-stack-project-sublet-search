@@ -217,7 +217,7 @@ export default function Profile(props) {
               </p>
 
               {reviews.map((review) => (
-                <ReviewCard key={review.id} review={review} />
+                <ReviewCard key={review.id} review={review} userId={userId} />
               ))}
             </div>
           </div>

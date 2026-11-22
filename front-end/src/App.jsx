@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -34,20 +35,24 @@ function App() {
         }
     });
 
-    const authHeaders = { headers: { "x-user-id": user?.id || "user1" } };
+    const activeUserId = user?.id || "user1";
 
     useEffect(() => {
         async function fetchSavedListings() {
             try {
-                const response = await axios.get("/api/saved", authHeaders);
+                const response = await axios.get("/api/saved", {
+                    headers: { "x-user-id": activeUserId },
+                });
+
                 setSavedListings(response.data);
             } catch (error) {
                 console.error("Error fetching saved listings:", error);
+                setSavedListings([]);
             }
         }
 
         fetchSavedListings();
-    }, [user?.id]);
+    }, [activeUserId]);
 
     function handleLogout() {
         localStorage.removeItem("user");
@@ -55,14 +60,16 @@ function App() {
     }
 
     async function toggleSave(id) {
+        const config = { headers: { "x-user-id": activeUserId } };
+
         try {
             if (savedIds.includes(id)) {
-                await axios.delete(`/api/saved/${id}`, authHeaders);
+                await axios.delete(`/api/saved/${id}`, config);
             } else {
-                await axios.post(`/api/saved/${id}`, null, authHeaders);
+                await axios.post(`/api/saved/${id}`, null, config);
             }
 
-            const response = await axios.get("/api/saved", authHeaders);
+            const response = await axios.get("/api/saved", config);
             setSavedListings(response.data);
         } catch (error) {
             console.error("Error updating saved listings:", error);
@@ -80,8 +87,9 @@ function App() {
                         element={<Explore savedIds={savedIds} onToggleSave={toggleSave} />}
                     />
 
-                    <Route path="reviewForm" element={<ReviewForm />} />
-                    <Route path="signUp" element={<Signup />} />
+                    <Route path="reviewForm/:targetUserId" element={<ReviewForm userId={user?.id} />} />
+
+                    <Route path="signUp" element={<Signup onSignUp={setUser} />} />
                     <Route path="messages" element={<Messages />} />
                     <Route path="post" element={<PostSubletPage />} />
                     <Route path="my-listings" element={<MyListings />} />
@@ -91,7 +99,7 @@ function App() {
                         element={<Profile user={user} savedIds={savedIds} onLogout={handleLogout} />}
                     />
 
-                    <Route path="listings/:id" element={<ViewDetails />} />
+                    <Route path="listings/:id" element={<ViewDetails userId={user?.id} />} />
                     <Route path="edit-profile" element={<EditProfile />} />
                     <Route path="verification" element={<Verification />} />
                     <Route path="payment-methods" element={<PaymentMethods />} />
@@ -103,7 +111,7 @@ function App() {
                 </Route>
 
                 <Route path="/" element={<Login onLogin={setUser} />} />
-                <Route path="/signUp" element={<Signup />} />
+                <Route path="/signUp" element={<Signup onSignUp={setUser} />} />
             </Routes>
         </BrowserRouter>
     );
