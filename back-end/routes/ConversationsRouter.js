@@ -1,7 +1,22 @@
 import express from "express";
+import fs from "fs";
+import multer from "multer";
+import path from "path";
 import conversationsMockData from "../data/conversationsMockData.js";
 
 const router = express.Router();
+
+fs.mkdirSync("public/uploads/documents", { recursive: true });
+
+const documentUpload = multer({
+    storage: multer.diskStorage({
+        destination: (req, file, cb) => cb(null, "public/uploads/documents"),
+        filename: (req, file, cb) => {
+            const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+            cb(null, `${uniqueName}${path.extname(file.originalname)}`);
+        }
+    })
+});
 
 router.get("/", (req, res) => {
     const userConvos = []
@@ -90,6 +105,26 @@ router.post("/:conversationId/messages", (req, res) => {
 
     
     return  res.status(404).send("Conversation Id not found")
+});
+
+router.post("/:conversationId/documents", documentUpload.single("document"), (req, res) => {
+    const conversation = conversationsMockData.find(
+        (convo) => convo.conversationId == req.params.conversationId
+    );
+
+    if (!conversation) {
+        return res.status(404).send("Conversation Id not found");
+    }
+
+    if (!req.file) {
+        return res.status(400).send("Document missing");
+    }
+
+    return res.status(201).json({
+        url: `/uploads/documents/${req.file.filename}`,
+        filename: req.file.filename,
+        originalName: req.file.originalname
+    });
 });
 
 router.patch("/:conversationId/read", (req, res) => {
