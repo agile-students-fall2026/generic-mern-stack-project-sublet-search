@@ -60,20 +60,15 @@ router.post("/api/login", (req, res) => {
 });
 
 router.post("/api/forgot-password", (req, res) => {
-    const { email, newPassword } = req.body;
+    const { email } = req.body ?? {};
 
-    if (!email || !newPassword) {
-        return res.status(400).json({ error: "Email and new password are required." });
+    if (typeof email !== "string" || !email.trim()) {
+        return res.status(400).json({ error: "Email is required." });
     }
 
-    const user = users.find(user => user.email.toLowerCase() === email.toLowerCase());
-    if (!user) {
-        return res.status(404).json({ error: "No account found with this email." });
-    }
-
-    user.password = newPassword;
-
-    res.json({ message: "Password updated! You can now log in." });
+    return res.json({
+        message: "Demo reset request received. No email was sent.",
+    });
 });
 
 export default router;
