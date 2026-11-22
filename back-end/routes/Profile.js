@@ -5,6 +5,8 @@ import reviews from "../data/reviews.js";
 
 const app = express.Router();
 
+const publicUser = ({ password, ...rest }) => rest;
+
 app.use((req, res, next) => {
   req.userId = req.header("x-user-id") || "user1";
   next();
@@ -17,7 +19,7 @@ app.get("/api/users/me", (req, res) => {
     return res.status(404).json({ error: "User not found." });
   }
 
-  res.json(user);
+  res.json(publicUser(user));
 });
 
 app.put("/api/users/me", (req, res) => {
@@ -35,7 +37,7 @@ app.put("/api/users/me", (req, res) => {
     }
   }
 
-  res.json(user);
+  res.json(publicUser(user));
 });
 
 app.put("/api/users/me/verifications", (req, res) => {
@@ -53,7 +55,7 @@ app.put("/api/users/me/verifications", (req, res) => {
     }
   }
 
-  res.json(user);
+  res.json(publicUser(user));
 });
 
 app.get("/api/users/me/listings", (req, res) => {

@@ -16,10 +16,16 @@ router.post("/api/signup", (req, res) => {
     }
 
     const newUser = {
-        id: `user${users.length + 1}`,
+        id: `user${Math.max(0, ...users.map(u => Number(String(u.id).replace(/\D/g, "")) || 0)) + 1}`,
         name,
         email: email.toLowerCase(),
         password,
+        bio: "",
+        school: "",
+        city: "",
+        photo: "",
+        verifications: { eduEmail: false, govId: false, phone: false },
+        savedListingIds: [],
     };
 
     users.push(newUser);
@@ -53,16 +59,21 @@ router.post("/api/login", (req, res) => {
     });
 });
 
-router.get("/api/users/me", (req, res) => {
-    const user = users.find(user => user.id === req.userId);
-    if (!user) {
-        return res.status(404).json({ error: "User not found." });
+router.post("/api/forgot-password", (req, res) => {
+    const { email, newPassword } = req.body;
+
+    if (!email || !newPassword) {
+        return res.status(400).json({ error: "Email and new password are required." });
     }
-    res.json({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-    });
+
+    const user = users.find(user => user.email.toLowerCase() === email.toLowerCase());
+    if (!user) {
+        return res.status(404).json({ error: "No account found with this email." });
+    }
+
+    user.password = newPassword;
+
+    res.json({ message: "Password updated! You can now log in." });
 });
 
 export default router;

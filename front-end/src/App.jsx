@@ -34,10 +34,12 @@ function App() {
         }
     });
 
+    const authHeaders = { headers: { "x-user-id": user?.id || "user1" } };
+
     useEffect(() => {
         async function fetchSavedListings() {
             try {
-                const response = await axios.get("/api/saved");
+                const response = await axios.get("/api/saved", authHeaders);
                 setSavedListings(response.data);
             } catch (error) {
                 console.error("Error fetching saved listings:", error);
@@ -45,7 +47,7 @@ function App() {
         }
 
         fetchSavedListings();
-    }, []);
+    }, [user?.id]);
 
     function handleLogout() {
         localStorage.removeItem("user");
@@ -55,12 +57,12 @@ function App() {
     async function toggleSave(id) {
         try {
             if (savedIds.includes(id)) {
-                await axios.delete(`/api/saved/${id}`);
+                await axios.delete(`/api/saved/${id}`, authHeaders);
             } else {
-                await axios.post(`/api/saved/${id}`);
+                await axios.post(`/api/saved/${id}`, null, authHeaders);
             }
 
-            const response = await axios.get("/api/saved");
+            const response = await axios.get("/api/saved", authHeaders);
             setSavedListings(response.data);
         } catch (error) {
             console.error("Error updating saved listings:", error);

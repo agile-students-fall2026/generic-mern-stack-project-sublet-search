@@ -29,6 +29,30 @@
     gap: 14px;
   }
   
+  .error-msg {
+    color: #d93025;
+    font-size: 13px;
+    text-align: center;
+    margin: 0 0 12px 0;
+  }
+  
+  .success-msg {
+    color: #188038;
+    font-size: 13px;
+    text-align: center;
+    margin: 0 0 12px 0;
+  }
+  
+  .forgot-row {
+    text-align: right;
+    margin-top: -6px;
+  }
+  
+  .guest-wrapper {
+    margin-top: 15px;
+    text-align: center;
+  }
+
   /* Buttons */
   .btn {
     width: 100%;
