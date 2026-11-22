@@ -12,19 +12,23 @@ app.use((req, res, next) => {
 
 app.get("/api/users/me", (req, res) => {
   const user = users.find((u) => u.id === req.userId);
+
   if (!user) {
     return res.status(404).json({ error: "User not found." });
   }
+
   res.json(user);
 });
 
 app.put("/api/users/me", (req, res) => {
   const user = users.find((u) => u.id === req.userId);
+
   if (!user) {
     return res.status(404).json({ error: "User not found." });
   }
 
   const allowed = ["name", "bio", "school", "city", "photo"];
+
   for (const field of allowed) {
     if (req.body[field] !== undefined) {
       user[field] = req.body[field];
@@ -35,63 +39,72 @@ app.put("/api/users/me", (req, res) => {
 });
 
 app.put("/api/users/me/verifications", (req, res) => {
-    const user = users.find((u) => u.id === req.userId);
-    if (!user) {
-      return res.status(404).json({ error: "User not found." });
-    }
-  
-    const allowed = ["eduEmail", "govId", "phone"];
-    for (const field of allowed) {
-      if (typeof req.body[field] === "boolean") {
-        user.verifications[field] = req.body[field];
-      }
-    }
-  
-    res.json(user);
-  });
-
-  app.get("/api/users/me/listings", (req, res) => {
-    const userListings = listings.filter(
-      (l) => String(l.ownerId || l.userId) === String(req.userId)
-    );
-  
-    res.json({
-      active: userListings.filter((l) => l.active !== false),
-      past: userListings.filter((l) => l.active === false),
-    });
-  });
-
-  app.delete("/api/users/me/listings/:listingId", (req, res) => {
-    const idx = listings.findIndex(
-      (l) =>
-        String(l.id) === String(req.params.listingId) &&
-        String(l.ownerId || l.userId) === String(req.userId)
-    );
-  
-    if (idx === -1) {
-      return res.status(404).json({ error: "Listing not found." });
-    }
-  
-    listings.splice(idx, 1);
-    res.json({ success: true });
-  });
-  
-app.get("/api/users/me/saved-listings", (req, res) => {
   const user = users.find((u) => u.id === req.userId);
+
   if (!user) {
     return res.status(404).json({ error: "User not found." });
   }
 
-  const saved = listings.filter(
-    (listing) => user.savedListingIds.includes(listing.id) && listing.active
+  const allowed = ["eduEmail", "govId", "phone"];
+
+  for (const field of allowed) {
+    if (typeof req.body[field] === "boolean") {
+        user.verifications[field] = req.body[field];
+    }
+  }
+
+  res.json(user);
+});
+
+app.get("/api/users/me/listings", (req, res) => {
+  const userListings = listings.filter(
+    (listing) => String(listing.ownerId || listing.userId) === String(req.userId)
   );
+
+  res.json({
+    active: userListings.filter((listing) => listing.active !== false),
+    past: userListings.filter((listing) => listing.active === false),
+  });
+});
+
+app.delete("/api/users/me/listings/:listingId", (req, res) => {
+  const index = listings.findIndex(
+    (listing) =>
+      String(listing.id) === String(req.params.listingId) &&
+      String(listing.ownerId || listing.userId) === String(req.userId)
+  );
+
+  if (index === -1) {
+    return res.status(404).json({ error: "Listing not found." });
+  }
+
+  listings.splice(index, 1);
+  res.json({ success: true });
+});
+
+app.get("/api/users/me/saved-listings", (req, res) => {
+  const user = users.find((u) => u.id === req.userId);
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found." });
+  }
+
+  const saved = listings.filter((listing) =>
+    (user.savedListingIds || []).includes(listing.id) && listing.active !== false
+  );
+
   res.json(saved);
 });
 
 app.post("/api/users/me/saved-listings/:listingId", (req, res) => {
   const user = users.find((u) => u.id === req.userId);
+
   if (!user) {
     return res.status(404).json({ error: "User not found." });
+  }
+
+  if (!Array.isArray(user.savedListingIds)) {
+    user.savedListingIds = [];
   }
 
   const listingId = Number(req.params.listingId);
@@ -106,10 +119,109 @@ app.post("/api/users/me/saved-listings/:listingId", (req, res) => {
   res.json({ savedListingIds: user.savedListingIds });
 });
 
+app.get("/api/saved", (req, res) => {
+  const user = users.find((u) => u.id === req.userId);
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  const savedListings = listings.filter((listing) =>
+    (user.savedListingIds || []).includes(listing.id) && listing.active !== false
+  );
+
+  res.json(savedListings);
+});
+
+app.post("/api/saved/:listingId", (req, res) => {
+  const user = users.find((u) => u.id === req.userId);
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  const listingId = Number(req.params.listingId);
+
+  if (!listings.some((listing) => listing.id === listingId && listing.active !== false)) {
+    return res.status(404).json({ error: "Listing not found" });
+  }
+
+  if (!Array.isArray(user.savedListingIds)) {
+    user.savedListingIds = [];
+  }
+
+  if (!user.savedListingIds.includes(listingId)) {
+    user.savedListingIds.push(listingId);
+  }
+
+  res.json(user.savedListingIds);
+});
+
+app.delete("/api/saved/:listingId", (req, res) => {
+  const user = users.find((u) => u.id === req.userId);
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  const listingId = Number(req.params.listingId);
+
+  user.savedListingIds = (user.savedListingIds || []).filter(
+    (id) => id !== listingId
+  );
+
+  res.json(user.savedListingIds);
+});
 
 app.get("/api/users/me/reviews", (req, res) => {
-  const myReviews = reviews.filter((r) => r.targetUserId === req.userId);
+  const myReviews = reviews.filter((review) => review.targetUserId === req.userId);
   res.json(myReviews);
+});
+
+app.get("/api/users/:userId/reviews/received", (req, res) => {
+  const userId = req.params.userId;
+  const user = users.find((u) => u.id === userId);
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  const receivedReviews = reviews.filter(
+    (review) => review.targetUserId === userId
+  );
+
+  res.json(receivedReviews);
+});
+
+app.get("/api/users/:userId/reviews/submitted", (req, res) => {
+  const userId = req.params.userId;
+  const user = users.find((u) => u.id === userId);
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  const submittedReviews = reviews.filter(
+    (review) => review.authorUserId === userId
+  );
+
+  res.json(submittedReviews);
+});
+
+app.post("/api/reviews/:reviewId/like", (req, res) => {
+  const reviewId = Number(req.params.reviewId);
+  const review = reviews.find((review) => review.id === reviewId);
+
+  if (!review) {
+    return res.status(404).json({ error: "Review not found" });
+  }
+
+  if (!review.likedBy.includes(req.userId)) {
+    review.likedBy.push(req.userId);
+    review.likes++;
+  }
+
+  res.json(review);
 });
 
 app.post("/api/auth/logout", (req, res) => {
@@ -118,21 +230,30 @@ app.post("/api/auth/logout", (req, res) => {
 
 app.get("/api/users/me/payment-methods", (req, res) => {
   const user = users.find((u) => String(u.id) === String(req.userId));
-  if (!user) return res.status(404).json({ error: "User not found." });
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found." });
+  }
 
   if (!Array.isArray(user.paymentMethods)) {
     user.paymentMethods = [
-      { id: "pm1", type: "Card", label: "Visa", last4: "4242", expiry: "08/28", isDefault: true },
+        { id: "pm1", type: "Card", label: "Visa", last4: "4242", expiry: "08/28", isDefault: true },
     ];
   }
+
   res.json(user.paymentMethods);
 });
 
 app.post("/api/users/me/payment-methods", (req, res) => {
   const user = users.find((u) => String(u.id) === String(req.userId));
-  if (!user) return res.status(404).json({ error: "User not found." });
 
-  if (!Array.isArray(user.paymentMethods)) user.paymentMethods = [];
+  if (!user) {
+    return res.status(404).json({ error: "User not found." });
+  }
+
+  if (!Array.isArray(user.paymentMethods)) {
+    user.paymentMethods = [];
+  }
 
   const newMethod = {
     id: `pm_${Date.now()}`,
@@ -149,22 +270,30 @@ app.post("/api/users/me/payment-methods", (req, res) => {
 
 app.put("/api/users/me/payment-methods/:methodId/default", (req, res) => {
   const user = users.find((u) => String(u.id) === String(req.userId));
-  if (!user) return res.status(404).json({ error: "User not found." });
 
-  user.paymentMethods = (user.paymentMethods || []).map((pm) => ({
-    ...pm,
-    isDefault: String(pm.id) === String(req.params.methodId),
+  if (!user) {
+    return res.status(404).json({ error: "User not found." });
+  }
+
+  user.paymentMethods = (user.paymentMethods || []).map((method) => ({
+    ...method,
+    isDefault: String(method.id) === String(req.params.methodId),
   }));
+
   res.json(user.paymentMethods);
 });
 
 app.delete("/api/users/me/payment-methods/:methodId", (req, res) => {
   const user = users.find((u) => String(u.id) === String(req.userId));
-  if (!user) return res.status(404).json({ error: "User not found." });
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found." });
+  }
 
   user.paymentMethods = (user.paymentMethods || []).filter(
-    (pm) => String(pm.id) !== String(req.params.methodId)
+    (method) => String(method.id) !== String(req.params.methodId)
   );
+
   res.json(user.paymentMethods);
 });
 
