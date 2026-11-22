@@ -1,15 +1,15 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import TextField from "../components/TextField";
-import {useNavigate} from "react-router-dom";
-import "./Login.css"
+import "./Login.css";
 
 export default function Login(props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [message, setMessage] = useState(""); 
-  const [isForgot, setIsForgot] = useState(false); 
+  const [message, setMessage] = useState("");
+  const [isForgot, setIsForgot] = useState(false);
 
   const navigate = useNavigate();
 
@@ -18,24 +18,30 @@ export default function Login(props) {
     setError("");
     setMessage("");
 
-  const res = await fetch("/api/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-  const data = await res.json();
+      const data = await res.json();
 
-  if (!res.ok) {
-    setError(data.error || "Login failed.");
-    return;
-  }
+      if (!res.ok) {
+        setError(data.error || "Login failed.");
+        return;
+      }
 
-  localStorage.setItem("user", JSON.stringify(data));
-    if (props.onLogin) {
-      props.onLogin(data);
+      localStorage.setItem("user", JSON.stringify(data));
+
+      if (props.onLogin) {
+        props.onLogin(data);
+      }
+
+      navigate("/app/explore");
+    } catch {
+      setError("Could not connect to the server.");
     }
-    navigate("/app/explore");
   }
 
   async function handleReset(e) {
@@ -43,49 +49,57 @@ export default function Login(props) {
     setError("");
     setMessage("");
 
-    const res = await fetch("/api/forgot-password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, newPassword: password }),
-    });
+    try {
+      const res = await fetch("/api/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) {
-      setError(data.error || "Reset failed.");
-      return;
+      if (!res.ok) {
+        setError(data.error || "Reset request failed.");
+        return;
+      }
+
+      setMessage(data.message);
+      setPassword("");
+      setIsForgot(false);
+    } catch {
+      setError("Could not connect to the server.");
     }
-
-    setMessage(data.message);
-    setPassword("");
-    setIsForgot(false);
   }
-  
+
   return (
     <div>
       <Header />
+
       <div className="page">
         <div className="card">
-        <h2>{isForgot ? "Reset Password" : "Login"}</h2>
+          <h2>{isForgot ? "Request a password reset" : "Login"}</h2>
 
-        {error && <p className="error-msg">{error}</p>}
-        {message && <p className="success-msg" >{message}</p>}
-       
+          {error && <p className="error-msg">{error}</p>}
+          {message && <p className="success-msg">{message}</p>}
+
           <form onSubmit={isForgot ? handleReset : handleLogin}>
-            <TextField 
-              label="Email" 
-              type="email" 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
-            />
-            <TextField 
-              label={isForgot ? "New Password" : "Password"} 
-              type="password" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
+            <TextField
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
 
-          {!isForgot && (
+            {!isForgot && (
+              <TextField
+                label="Password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            )}
+
+            {!isForgot && (
               <div className="forgot-row">
                 <button
                   type="button"
@@ -102,35 +116,43 @@ export default function Login(props) {
             )}
 
             <button type="submit" className="btn primary">
-              {isForgot ? "Reset Password" : "Login"}
+              {isForgot ? "Request reset" : "Login"}
             </button>
+          </form>
 
-            </form>
-
-          {!isForgot ? (
-              <p className="switch-text">
-                <button
-                  type="button"
-                  className="link"
-                  onClick={() => {
-                    setIsForgot(false);
-                    setError("");
-                  }}
-                >
-                  Back to Login
-                </button>
-              </p>
+          {isForgot ? (
+            <p className="switch-text">
+              <button
+                type="button"
+                className="link"
+                onClick={() => {
+                  setIsForgot(false);
+                  setError("");
+                  setMessage("");
+                }}
+              >
+                Back to Login
+              </button>
+            </p>
           ) : (
             <p className="switch-text">
-            Don't have an account?{" "}
-            <button className="link" onClick={() => navigate("/signUp")}>
-              Sign Up
-            </button>
+              Don't have an account?{" "}
+              <button
+                type="button"
+                className="link"
+                onClick={() => navigate("/signUp")}
+              >
+                Sign Up
+              </button>
             </p>
-            )}
+          )}
 
           <div className="guest-wrapper">
-            <button className="btn secondary" onClick={() => navigate("/app/explore")}>
+            <button
+              type="button"
+              className="btn secondary"
+              onClick={() => navigate("/app/explore")}
+            >
               Continue as a Guest
             </button>
           </div>
