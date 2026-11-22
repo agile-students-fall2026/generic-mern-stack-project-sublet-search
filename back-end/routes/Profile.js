@@ -210,6 +210,47 @@ app.get("/api/users/:userId/reviews/submitted", (req, res) => {
   res.json(submittedReviews);
 });
 
+
+
+app.post("/api/reviews", (req, res) => {
+  const { targetUserId, rating, text } = req.body || {};
+
+  const author = users.find((user) => user.id === req.userId);
+  const target = users.find((user) => user.id === targetUserId);
+
+  if (!author || !target) {
+    return res.status(404).json({ error: "User not found." });
+  }
+
+  if (author.id === target.id) {
+    return res.status(400).json({ error: "You cannot review yourself." });
+  }
+
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5 ||
+    typeof text !== "string" || !text.trim()) {
+    return res.status(400).json({ error: "Enter a valid rating and review." });
+  }
+
+  const review = {
+    id: Math.max(0, ...reviews.map((review) => review.id)) + 1,
+    targetUserId: target.id,
+    authorUserId: author.id,
+    author: author.name,
+    date: new Date().toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    }),
+    rating,
+    text: text.trim(),
+    likes: 0,
+    likedBy: [],
+  };
+
+  reviews.push(review);
+  res.status(201).json(review);
+});
+
+
 app.post("/api/reviews/:reviewId/like", (req, res) => {
   const reviewId = Number(req.params.reviewId);
   const review = reviews.find((review) => review.id === reviewId);

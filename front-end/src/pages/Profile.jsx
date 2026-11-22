@@ -2,7 +2,7 @@ import ListingCard from "../components/ListingCard";
 import ReviewCard from "../components/ReviewCard";
 import { useNavigate } from "react-router-dom";
 import "./Profile.css";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 export default function Profile(props) {
   const navigate = useNavigate();
@@ -217,7 +217,7 @@ export default function Profile(props) {
               </p>
 
               {reviews.map((review) => (
-                <ReviewCard key={review.id} review={review} />
+                <ReviewCard key={review.id} review={review} userId={userId} />
               ))}
             </div>
           </div>
