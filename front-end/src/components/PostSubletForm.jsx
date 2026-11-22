@@ -190,6 +190,9 @@ const PostSublet = () => {
                     <p className="PostSublet-Feedback">{error}</p>
                 </div>
             )}
+            {success && (
+                <p role="status">{success}</p>
+            )}
             <input type="submit" value="Post Listing" />
         </form>
     )

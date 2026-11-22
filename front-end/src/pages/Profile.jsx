@@ -2,7 +2,7 @@ import ListingCard from "../components/ListingCard";
 import ReviewCard from "../components/ReviewCard";
 import { useNavigate } from "react-router-dom";
 import "./Profile.css";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 export default function Profile(props) {
   const navigate = useNavigate();
