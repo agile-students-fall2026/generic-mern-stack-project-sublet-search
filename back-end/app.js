@@ -9,7 +9,7 @@ import profileRoutes from "./routes/Profile.js";
 const app = express();
 app.use(cors())
 app.use(express.json());
-app. use("/uploads", express.static ("public/uploads"));
+app.use("/uploads", express.static ("public/uploads"));
 
 app.use((req, res, next) => {
     req.userId = req.header("x-user-id") || "user1";

@@ -3,7 +3,8 @@ import axios from 'axios';
 import ListingCard from '../components/ListingCard';
 import './MyListings.css';
 
-const API = 'http://localhost:3000'
+const API = "http://localhost:3000"
+const imageUrl = path => (path?.startsWith("/uploads") ? `${API}${path}` : path)
 
 const MyListings = () => {
   const [listings, setListings] = useState([])
@@ -36,7 +37,7 @@ const MyListings = () => {
         <div className="MyListings-grid">
           {listings.map(listing => (
             <div key={listing.id} className="MyListings-item">
-              <ListingCard listing={listing} />
+              <ListingCard listing={{ ...listing, image: imageUrl(listing.image) }} />
               <button
                 type="button"
                 className="MyListings-remove"
