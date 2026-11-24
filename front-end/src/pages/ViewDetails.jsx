@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./ViewDetails.css";
 
+const API = "http://localhost:3000";
+const imageUrl = path => (path?.startsWith("/uploads") ? `${API}${path}` : path);
+
 const ViewDetails = ({ userId }) => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -21,7 +24,7 @@ const ViewDetails = ({ userId }) => {
             setPhotoIndex(0);
 
             try {
-                const response = await fetch(`/api/listings/${id}`, {
+                const response = await fetch(`${API}/api/listings/${id}`, {
                     headers: userId ? { "x-user-id": userId } : {},
                     signal: controller.signal,
                 });
@@ -96,7 +99,7 @@ const ViewDetails = ({ userId }) => {
             {photos.length > 0 && (
                 <img
                     className="ListingDetails-mainImg"
-                    src={photos[photoIndex]}
+                    src={imageUrl(photos[photoIndex])}
                     alt={`${listing.title}, photo ${photoIndex + 1}`}
                 />
             )}
@@ -107,7 +110,7 @@ const ViewDetails = ({ userId }) => {
                         <img
                             key={photo}
                             className={index === photoIndex ? "ListingDetails-thumb selected" : "ListingDetails-thumb"}
-                            src={photo}
+                            src={imageUrl(photo)}
                             alt={`Photo ${index + 1}`}
                             onClick={() => setPhotoIndex(index)}
                         />
