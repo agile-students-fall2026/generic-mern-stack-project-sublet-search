@@ -1,4 +1,7 @@
 import express from "express";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 import users from "../data/users.js";
 import listings from "../data/listings.js";
 import reviews from "../data/reviews.js";
@@ -6,6 +9,28 @@ import reviews from "../data/reviews.js";
 const app = express.Router();
 
 const publicUser = ({ password, ...rest }) => rest;
+
+const AVATAR_DIR = "public/uploads/avatars";
+const AVATAR_URL_PREFIX = "/uploads/avatars/";
+fs.mkdirSync(AVATAR_DIR, { recursive: true });
+
+const avatarUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, AVATAR_DIR),
+    filename: (req, file, cb) => {
+      const unique = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+      cb(null, `avatar-${unique}${path.extname(file.originalname).toLowerCase()}`);
+    },
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => cb(null, file.mimetype.startsWith("image/")),
+}).single("photo");
+
+// Delete a previously uploaded avatar file (never touches external URLs).
+function removeAvatarFile(photo) {
+  if (typeof photo !== "string" || !photo.startsWith(AVATAR_URL_PREFIX)) return;
+  fs.unlink(path.join(AVATAR_DIR, path.basename(photo)), () => {});
+}
 
 app.use((req, res, next) => {
   req.userId = req.header("x-user-id") || "user1";
@@ -37,6 +62,43 @@ app.put("/api/users/me", (req, res) => {
     }
   }
 
+  res.json(publicUser(user));
+});
+
+app.post("/api/users/me/photo", (req, res) => {
+  const user = users.find((u) => u.id === req.userId);
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found." });
+  }
+
+  avatarUpload(req, res, (err) => {
+    if (err) {
+      const tooBig = err.code === "LIMIT_FILE_SIZE";
+      return res
+        .status(tooBig ? 413 : 400)
+        .json({ error: tooBig ? "Image must be 5 MB or smaller." : "Upload failed." });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: "Please choose an image file." });
+    }
+
+    removeAvatarFile(user.photo);
+    user.photo = `${AVATAR_URL_PREFIX}${req.file.filename}`;
+    res.status(201).json(publicUser(user));
+  });
+});
+
+app.delete("/api/users/me/photo", (req, res) => {
+  const user = users.find((u) => u.id === req.userId);
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found." });
+  }
+
+  removeAvatarFile(user.photo);
+  user.photo = "";
   res.json(publicUser(user));
 });
 
@@ -299,7 +361,7 @@ app.post("/api/users/me/payment-methods", (req, res) => {
   }
 
   const newMethod = {
-    id: `pm_${Date.now()}`,
+    id: `pm_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     type: req.body.type || "Card",
     label: req.body.label,
     last4: req.body.last4,

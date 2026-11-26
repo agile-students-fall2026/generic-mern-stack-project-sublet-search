@@ -2,7 +2,10 @@ import ListingCard from "../components/ListingCard";
 import ReviewCard from "../components/ReviewCard";
 import { useNavigate } from "react-router-dom";
 import "./Profile.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+
+const API = "http://localhost:3000";
+const imageUrl = (path) => (path?.startsWith("/uploads") ? `${API}${path}` : path);
 
 export default function Profile(props) {
   const navigate = useNavigate();
@@ -15,6 +18,9 @@ export default function Profile(props) {
   const [reviews, setReviews] = useState([]);
   const [mode, setMode] = useState("sublessor");
   const [loading, setLoading] = useState(true);
+  const [photoError, setPhotoError] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileInput = useRef(null);
   
   const applications = props.applications || [];
 
@@ -63,6 +69,71 @@ export default function Profile(props) {
     }
   }
 
+  function savePhotoLocally(photo) {
+    try {
+      const current = JSON.parse(localStorage.getItem("user") || "{}");
+      localStorage.setItem("user", JSON.stringify({ ...current, photo }));
+    } catch {
+      /* ignore unreadable storage */
+    }
+  }
+
+  async function handlePhotoChange(e) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setPhotoError("");
+    if (!file.type.startsWith("image/")) {
+      setPhotoError("Please choose an image file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoError("Image must be 5 MB or smaller.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("photo", file);
+    setUploading(true);
+    try {
+      const res = await fetch("/api/users/me/photo", {
+        method: "POST",
+        headers: { "x-user-id": userId },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPhotoError(data.error || "Upload failed.");
+        return;
+      }
+      setProfile(data);
+      savePhotoLocally(data.photo);
+    } catch {
+      setPhotoError("Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handlePhotoRemove() {
+    setPhotoError("");
+    try {
+      const res = await fetch("/api/users/me/photo", {
+        method: "DELETE",
+        headers: { "x-user-id": userId },
+      });
+      if (!res.ok) {
+        setPhotoError("Could not remove the photo.");
+        return;
+      }
+      setProfile(await res.json());
+      savePhotoLocally("");
+    } catch {
+      setPhotoError("Could not remove the photo.");
+    }
+  }
+
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
     localStorage.removeItem("user");
@@ -82,11 +153,40 @@ export default function Profile(props) {
         <div className="card">
           <div className="photo">
             {profile.photo ? (
-              <img src={profile.photo} alt={profile.name} />
+              <img src={imageUrl(profile.photo)} alt={profile.name} />
             ) : (
             "Profile photo" 
             )}
             </div>
+
+            <input
+              ref={fileInput}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={handlePhotoChange}
+            />
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={() => fileInput.current?.click()}
+            >
+              {uploading
+                ? "Uploading..."
+                : profile.photo
+                ? "Change profile picture"
+                : "Add profile picture"}
+            </button>
+            {profile.photo && (
+              <button type="button" onClick={handlePhotoRemove}>
+                Remove picture
+              </button>
+            )}
+            {photoError && (
+              <p className="muted" role="alert">
+                {photoError}
+              </p>
+            )}
 
             <h3>{profile.name}</h3>
           <p>{profile.bio}</p>

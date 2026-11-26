@@ -1,6 +1,7 @@
 import { expect, use } from "chai";
 import chaiHttp, { request } from "chai-http";
 import app from "../app.js";
+import fs from "fs";
 import users from "../data/users.js";
 
 use(chaiHttp);
@@ -185,6 +186,102 @@ describe("Profile API", () => {
             expect(await as(api().post("/api/users/me/payment-methods"), "nobody").send({})).to.have.status(404);
             expect(await as(api().put("/api/users/me/payment-methods/x/default"), "nobody")).to.have.status(404);
             expect(await as(api().delete("/api/users/me/payment-methods/x"), "nobody")).to.have.status(404);
+        });
+    });
+
+    describe("profile picture", () => {
+        const png = Buffer.from(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+            "base64"
+        );
+        const upload = (id, buf = png, name = "me.png", type = "image/png") =>
+            as(api().post("/api/users/me/photo"), id).attach("photo", buf, { filename: name, contentType: type });
+
+        afterEach(async () => {
+            await as(api().delete("/api/users/me/photo"), "user1");
+            await as(api().delete("/api/users/me/photo"), "user2");
+        });
+
+        it("uploads an image and stores its URL on the profile", async () => {
+            const res = await upload("user1");
+
+            expect(res).to.have.status(201);
+            expect(res.body.photo).to.match(/^\/uploads\/avatars\/avatar-.*\.png$/);
+            expect(res.body).to.not.have.property("password");
+            expect(fs.existsSync(`public${res.body.photo}`)).to.equal(true);
+
+            const me = await as(api().get("/api/users/me"), "user1");
+            expect(me.body.photo).to.equal(res.body.photo);
+        });
+
+        it("serves the uploaded file", async () => {
+            const res = await upload("user1");
+            const file = await api().get(res.body.photo);
+
+            expect(file).to.have.status(200);
+            expect(file.type).to.equal("image/png");
+        });
+
+        it("replaces the old file when a new picture is uploaded", async () => {
+            const first = await upload("user1");
+            const second = await upload("user1");
+
+            expect(second.body.photo).to.not.equal(first.body.photo);
+            expect(fs.existsSync(`public${first.body.photo}`)).to.equal(false);
+            expect(fs.existsSync(`public${second.body.photo}`)).to.equal(true);
+        });
+
+        it("rejects a request with no file", async () => {
+            const res = await as(api().post("/api/users/me/photo"), "user1");
+            expect(res).to.have.status(400);
+        });
+
+        it("rejects a non-image file", async () => {
+            const res = await upload("user1", Buffer.from("hello"), "note.txt", "text/plain");
+
+            expect(res).to.have.status(400);
+            expect(users.find((u) => u.id === "user1").photo).to.equal("");
+        });
+
+        it("rejects an image over 5 MB", async () => {
+            const res = await upload("user1", Buffer.alloc(5 * 1024 * 1024 + 1), "big.png");
+
+            expect(res).to.have.status(413);
+            expect(users.find((u) => u.id === "user1").photo).to.equal("");
+        });
+
+        it("returns 404 for an unknown user and stores nothing", async () => {
+            const res = await upload("nobody");
+            expect(res).to.have.status(404);
+        });
+
+        it("only changes the requesting user's picture", async () => {
+            await upload("user1");
+            const other = await as(api().get("/api/users/me"), "user2");
+
+            expect(other.body.photo).to.equal("");
+        });
+
+        it("removes the picture and deletes the file", async () => {
+            const added = await upload("user1");
+            const res = await as(api().delete("/api/users/me/photo"), "user1");
+
+            expect(res).to.have.status(200);
+            expect(res.body.photo).to.equal("");
+            expect(fs.existsSync(`public${added.body.photo}`)).to.equal(false);
+        });
+
+        it("does not try to delete an external photo URL", async () => {
+            await as(api().put("/api/users/me"), "user1").send({ photo: "https://example.com/a.png" });
+            const res = await as(api().delete("/api/users/me/photo"), "user1");
+
+            expect(res).to.have.status(200);
+            expect(res.body.photo).to.equal("");
+        });
+
+        it("returns 404 when removing for an unknown user", async () => {
+            const res = await as(api().delete("/api/users/me/photo"), "nobody");
+            expect(res).to.have.status(404);
         });
     });
 });
